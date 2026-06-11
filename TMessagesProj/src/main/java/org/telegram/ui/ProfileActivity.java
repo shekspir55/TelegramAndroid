@@ -594,6 +594,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
     private final static int delete_group = 45;
     private final static int enable_no_forwards = 46;
     private final static int disable_no_forwards = 47;
+    private final static int block_channel_fg = 48;
 
     private Rect rect = new Rect();
 
@@ -2644,6 +2645,9 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                     if (button != null) {
                         button.setTextColor(Theme.getColor(Theme.key_text_RedBold));
                     }
+                } else if (id == block_channel_fg) {
+                    boolean nowBlocked = SharedConfig.toggleBlockedChannel(chatId);
+                    BulletinFactory.of(ProfileActivity.this).createSimpleBulletin(R.raw.chats_infotip, nowBlocked ? "Channel blocked" : "Channel unblocked").show();
                 } else if (id == report) {
                     ReportBottomSheet.openChat(ProfileActivity.this, getDialogId());
                 } else if (id == edit_channel) {
@@ -12245,6 +12249,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                     if (topicId == 0) {
                         otherItem.addSubItem(add_shortcut, R.drawable.msg_home, LocaleController.getString(R.string.AddShortcut));
                     }
+                    otherItem.addSubItem(block_channel_fg, R.drawable.msg_block, SharedConfig.isChannelBlocked(chatId) ? "Unblock Channel" : "Block Channel");
                     if (currentChat.creator) {
                         otherItem.addColoredGap();
                         otherItem.addSubItem(leave_group, R.drawable.msg_leave, getString(R.string.LeaveChannel));

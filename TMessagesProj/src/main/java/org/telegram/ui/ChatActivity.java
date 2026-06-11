@@ -2824,6 +2824,10 @@ public class ChatActivity extends BaseFragment implements
                     return false;
                 }
             }
+            if (ChatObject.isChannel(currentChat) && !currentChat.megagroup && SharedConfig.isChannelBlocked(chatId)) {
+                Toast.makeText(ApplicationLoader.applicationContext, "Channel is blocked", Toast.LENGTH_SHORT).show();
+                return false;
+            }
             if (ChatObject.isMonoForum(currentChat)) {
                 chatMode = MODE_SUGGESTIONS;
                 isSubscriberSuggestions = !ChatObject.canManageMonoForum(currentAccount, currentChat);

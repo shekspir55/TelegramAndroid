@@ -174,6 +174,7 @@ public class ForkSettingsActivity extends BaseFragment {
     private int disableUnifiedPushRow;
     private int cloudflareSTTRow;
     private int cloudflareEnableSTTRow;
+    private int blockedChannelsRow;
 
     private int syncPinsRow;
 
@@ -473,6 +474,36 @@ public class ForkSettingsActivity extends BaseFragment {
         builder.show();
     }
 
+    private void showBlockedChannelsDialog() {
+        var context = getParentActivity();
+        var builder = new AlertDialog.Builder(context);
+        builder.setTitle("Blocked Channels");
+        builder.setMessage("Edit comma-separated channel IDs:");
+
+        android.widget.EditText editText = new android.widget.EditText(context);
+        editText.setText(SharedConfig.blockedChannelIds);
+        editText.setMinLines(3);
+        editText.setGravity(android.view.Gravity.TOP | android.view.Gravity.LEFT);
+        editText.setPadding(AndroidUtilities.dp(16), AndroidUtilities.dp(8), AndroidUtilities.dp(16), AndroidUtilities.dp(8));
+        builder.setView(editText);
+
+        builder.setNegativeButton(LocaleController.getString("Cancel", R.string.Cancel), null);
+        builder.setPositiveButton(LocaleController.getString("OK", R.string.OK), (dialog, which) -> {
+            SharedConfig.blockedChannelIds = editText.getText().toString().trim();
+            SharedConfig.saveConfig();
+            RecyclerListView.Holder holder = (RecyclerListView.Holder) listView.findViewHolderForAdapterPosition(blockedChannelsRow);
+            if (holder != null && holder.itemView instanceof TextSettingsCell) {
+                ((TextSettingsCell) holder.itemView).getValueTextView().setText(getBlockedChannelsText());
+            }
+        });
+        builder.show();
+    }
+
+    private String getBlockedChannelsText() {
+        if (SharedConfig.blockedChannelIds == null || SharedConfig.blockedChannelIds.isEmpty()) return "0";
+        return String.valueOf(SharedConfig.blockedChannelIds.split(",").length);
+    }
+
     @Override
     public boolean onFragmentCreate() {
         super.onFragmentCreate();
@@ -494,6 +525,7 @@ public class ForkSettingsActivity extends BaseFragment {
         hideBottomButton = SharedConfig.isUserOwner() ? rowCount++ : -1;
         lockPremium = rowCount++;
         disableUnifiedPushRow = rowCount++;
+        blockedChannelsRow = rowCount++;
 
         emptyRows.add(rowCount++);
         sectionRows.add(rowCount++);
@@ -686,6 +718,8 @@ public class ForkSettingsActivity extends BaseFragment {
                 toggleGlobalMainSetting("hideSensitiveData", view, false);
             } else if (position == disableUnifiedPushRow) {
                 toggleGlobalMainSetting("disableUnifiedPush", view, false);
+            } else if (position == blockedChannelsRow) {
+                showBlockedChannelsDialog();
             } else if (position == cloudflareEnableSTTRow) {
                 if (!SharedConfig.cfEnableStt && (android.text.TextUtils.isEmpty(SharedConfig.cfAccountID) || android.text.TextUtils.isEmpty(SharedConfig.cfApiToken))) {
                     showCfCredentialsDialog();
@@ -780,6 +814,8 @@ public class ForkSettingsActivity extends BaseFragment {
                         textCell.setTextAndValue(t, v, false);
                     } else if (position == lastFmLoginRow) {
                         textCell.setTextAndIcon("Last.fm Login", R.drawable.ic_lastfm, false);
+                    } else if (position == blockedChannelsRow) {
+                        textCell.setTextAndValue("Blocked Channels", getBlockedChannelsText(), false);
                     }
                     break;
                 }
@@ -967,7 +1003,8 @@ public class ForkSettingsActivity extends BaseFragment {
                         || position == cloudflareSTTRow
                         || position == cloudflareEnableSTTRow
                         || position == lastFmLoginRow
-                        || position == disableUnifiedPushRow;
+                        || position == disableUnifiedPushRow
+                        || position == blockedChannelsRow;
             return fork;
         }
 
@@ -1005,7 +1042,7 @@ public class ForkSettingsActivity extends BaseFragment {
         public int getItemViewType(int position) {
             if (emptyRows.contains(position)) {
                 return 1;
-            } else if (position == customTitleRow || position == hiddenAccountsRow || position == cloudflareSTTRow || position == voiceQualityRow || position == updateCheckIntervalRow || position == lastFmLoginRow) {
+            } else if (position == customTitleRow || position == hiddenAccountsRow || position == cloudflareSTTRow || position == voiceQualityRow || position == updateCheckIntervalRow || position == lastFmLoginRow || position == blockedChannelsRow) {
                 return 2;
             } else if (position == squareAvatarsRow
                 || position == hideSensitiveDataRow

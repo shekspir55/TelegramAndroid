@@ -64,6 +64,37 @@ public class SharedConfig {
     public static String cfAccountID = "";
     public static String cfApiToken = "";
     public static boolean cfEnableStt = false;
+    public static String blockedChannelIds = "";
+
+    public static boolean isChannelBlocked(long chatId) {
+        if (TextUtils.isEmpty(blockedChannelIds)) return false;
+        String target = String.valueOf(chatId);
+        for (String id : blockedChannelIds.split(",")) {
+            if (id.trim().equals(target)) return true;
+        }
+        return false;
+    }
+
+    public static boolean toggleBlockedChannel(long chatId) {
+        String target = String.valueOf(chatId);
+        if (isChannelBlocked(chatId)) {
+            String[] parts = blockedChannelIds.split(",");
+            StringBuilder sb = new StringBuilder();
+            for (String part : parts) {
+                if (!part.trim().equals(target)) {
+                    if (sb.length() > 0) sb.append(",");
+                    sb.append(part.trim());
+                }
+            }
+            blockedChannelIds = sb.toString();
+            saveConfig();
+            return false;
+        } else {
+            blockedChannelIds = TextUtils.isEmpty(blockedChannelIds) ? target : blockedChannelIds + "," + target;
+            saveConfig();
+            return true;
+        }
+    }
 
     public static boolean loopStickers() {
         return LiteMode.isEnabled(LiteMode.FLAG_ANIMATED_STICKERS_CHAT);
@@ -485,6 +516,7 @@ public class SharedConfig {
                 editor.putString("cfAccountID", cfAccountID);
                 editor.putString("cfApiToken", cfApiToken);
                 editor.putBoolean("cfEnableStt", cfEnableStt);
+                editor.putString("blockedChannelIds", blockedChannelIds);
 
                 if (pendingAppUpdate != null) {
                     try {
@@ -555,6 +587,7 @@ public class SharedConfig {
             cfAccountID = preferences.getString("cfAccountID", "");
             cfApiToken = preferences.getString("cfApiToken", "");
             cfEnableStt = preferences.getBoolean("cfEnableStt", false);
+            blockedChannelIds = preferences.getString("blockedChannelIds", "");
             String authKeyString = preferences.getString("pushAuthKey", null);
             if (!TextUtils.isEmpty(authKeyString)) {
                 pushAuthKey = Base64.decode(authKeyString, Base64.DEFAULT);
